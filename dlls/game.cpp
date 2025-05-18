@@ -296,6 +296,11 @@ cvar_t sk_plr_357_bullet1 = {"sk_plr_357_bullet1", "0"};
 cvar_t sk_plr_357_bullet2 = {"sk_plr_357_bullet2", "0"};
 cvar_t sk_plr_357_bullet3 = {"sk_plr_357_bullet3", "0"};
 
+// 40 cal Round
+cvar_t sk_plr_40_bullet1 = {"sk_plr_40_bullet1", "0"};
+cvar_t sk_plr_40_bullet2 = {"sk_plr_40_bullet2", "0"};
+cvar_t sk_plr_40_bullet3 = {"sk_plr_40_bullet3", "0"};
+
 // MP5 Round
 cvar_t sk_plr_9mmAR_bullet1 = {"sk_plr_9mmAR_bullet1", "0"};
 cvar_t sk_plr_9mmAR_bullet2 = {"sk_plr_9mmAR_bullet2", "0"};
@@ -772,6 +777,11 @@ void GameDLLInit()
 	CVAR_REGISTER(&sk_plr_357_bullet1); // {"sk_plr_357_bullet1","0"};
 	CVAR_REGISTER(&sk_plr_357_bullet2); // {"sk_plr_357_bullet2","0"};
 	CVAR_REGISTER(&sk_plr_357_bullet3); // {"sk_plr_357_bullet3","0"};
+
+	// 40 cal Round
+	CVAR_REGISTER(&sk_plr_40_bullet1); // {"sk_plr_40_bullet1","0"};
+	CVAR_REGISTER(&sk_plr_40_bullet2); // {"sk_plr_40_bullet2","0"};
+	CVAR_REGISTER(&sk_plr_40_bullet3); // {"sk_plr_40_bullet3","0"};
 
 	// MP5 Round
 	CVAR_REGISTER(&sk_plr_9mmAR_bullet1); // {"sk_plr_9mmAR_bullet1","0"};

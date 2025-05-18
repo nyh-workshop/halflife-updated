@@ -158,6 +158,7 @@ void DecalGunshot(TraceResult* pTrace, int iBulletType)
 		case BULLET_MONSTER_MP5:
 		case BULLET_PLAYER_BUCKSHOT:
 		case BULLET_PLAYER_357:
+		case BULLET_PLAYER_40:
 		default:
 			// smoke and decal
 			UTIL_GunshotDecalTrace(pTrace, DamageDecal(pEntity, DMG_BULLET));
@@ -293,6 +294,9 @@ void W_Precache()
 	// python
 	UTIL_PrecacheOtherWeapon("weapon_357");
 	UTIL_PrecacheOther("ammo_357");
+
+	// 40 cal
+	UTIL_PrecacheOther("ammo_40");
 
 	// gauss
 	UTIL_PrecacheOtherWeapon("weapon_gauss");

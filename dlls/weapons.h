@@ -91,6 +91,7 @@ public:
 #define URANIUM_MAX_CARRY 100
 #define _9MM_MAX_CARRY 250
 #define _357_MAX_CARRY 36
+#define _40_MAX_CARRY 91
 #define BUCKSHOT_MAX_CARRY 125
 #define BOLT_MAX_CARRY 50
 #define ROCKET_MAX_CARRY 5
@@ -106,6 +107,7 @@ public:
 
 //#define CROWBAR_MAX_CLIP		WEAPON_NOCLIP
 #define GLOCK_MAX_CLIP 17
+#define _40_MAX_CLIP 13
 #define PYTHON_MAX_CLIP 6
 #define MP5_MAX_CLIP 50
 #define MP5_DEFAULT_AMMO 25
@@ -160,6 +162,7 @@ typedef enum
 	BULLET_PLAYER_357,		// python
 	BULLET_PLAYER_BUCKSHOT, // shotgun
 	BULLET_PLAYER_CROWBAR,	// crowbar swipe
+	BULLET_PLAYER_40,
 
 	BULLET_MONSTER_9MM,
 	BULLET_MONSTER_MP5,

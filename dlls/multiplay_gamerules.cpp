@@ -130,6 +130,9 @@ void CHalfLifeMultiplay::RefreshSkillData()
 	// 357 Round
 	gSkillData.plrDmg357 = 50;
 
+	// 40 Round
+	gSkillData.plrDmg40 = 21;
+
 	// MP5 Round
 	gSkillData.plrDmgMP5 = 12;
 
@@ -498,7 +501,7 @@ void CHalfLifeMultiplay::PlayerSpawn(CBasePlayer* pPlayer)
 	{
 		pPlayer->GiveNamedItem("weapon_crowbar");
 		pPlayer->GiveNamedItem("weapon_9mmhandgun");
-		pPlayer->GiveAmmo(68, "9mm", _9MM_MAX_CARRY); // 4 full reloads
+		pPlayer->GiveAmmo(68, "40cal", _40_MAX_CARRY); // 4 full reloads
 	}
 
 	pPlayer->m_iAutoWepSwitch = originalAutoWepSwitch;

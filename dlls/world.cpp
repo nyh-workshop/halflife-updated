@@ -501,6 +501,9 @@ void CWorld::Spawn()
 
 void CWorld::Precache()
 {
+	// Startup message:
+	ALERT(at_console, "Server: Using halflife-updated SDK\n");
+
 	// Flag this entity for removal if it's not the actual world entity.
 	if (World != this)
 	{

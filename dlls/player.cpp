@@ -1095,6 +1095,7 @@ void CBasePlayer::TabulateAmmo()
 	ammo_rockets = AmmoInventory(GetAmmoIndex("rockets"));
 	ammo_uranium = AmmoInventory(GetAmmoIndex("uranium"));
 	ammo_hornets = AmmoInventory(GetAmmoIndex("Hornets"));
+	ammo_40 = AmmoInventory(GetAmmoIndex("40cal"));
 }
 
 
@@ -3623,6 +3624,7 @@ void CBasePlayer::CheatImpulseCommands(int iImpulse)
 		GiveNamedItem("weapon_tripmine");
 		GiveNamedItem("weapon_357");
 		GiveNamedItem("ammo_357");
+		GiveNamedItem("ammo_40");
 		GiveNamedItem("weapon_crossbow");
 		GiveNamedItem("ammo_crossbow");
 		GiveNamedItem("weapon_egon");
