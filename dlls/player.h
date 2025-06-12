@@ -111,6 +111,10 @@ public:
 	float m_flFlashLightTime; // Time until next battery draw/Recharge
 	int m_iFlashBattery;	  // Flashlight Battery Draw
 
+	float m_flStaminaTime; // Time until stamina drains/recharge
+	int m_iStamina;	// player stamina when sprinting
+	bool isSprinting; // is player sprinting or not??
+
 	int m_afButtonLast;
 	int m_afButtonPressed;
 	int m_afButtonReleased;

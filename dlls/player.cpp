@@ -61,6 +61,11 @@ extern bool IsBustingGame();
 #define FLASH_DRAIN_TIME 1.2  //100 units/3 minutes
 #define FLASH_CHARGE_TIME 0.2 // 100 units/20 seconds  (seconds per unit)
 
+#define STAMINA_DRAIN_TIME 1.0
+#define STAMINA_CHARGE_TIME 0.025
+#define CLIENTSPEED_SPRINT 533.33
+#define CLIENTSPEED_NORMAL 320.00
+
 // Global Savedata for player
 TYPEDESCRIPTION CBasePlayer::m_playerSaveData[] =
 	{
@@ -2022,6 +2027,41 @@ void CBasePlayer::PreThink()
 		Jump();
 	}
 
+	// Imitating Half-Life 2's sprint function? :D
+	// Sprint when only move forwards, backwards, or sideways (l + r):
+	const bool onGroundMotion = ((pev->button & IN_FORWARD) != 0) ||
+								((pev->button & IN_BACK) != 0) ||
+								((pev->button & IN_MOVELEFT) != 0) ||
+								((pev->button & IN_MOVERIGHT) != 0);
+
+	if (m_iStamina > 0)
+	{
+		if (((pev->button & IN_RUN) != 0) && onGroundMotion)
+		{
+			isSprinting = true;
+			m_flStaminaTime = gpGlobals->time;
+			g_engfuncs.pfnSetClientMaxspeed(edict(), CLIENTSPEED_SPRINT);
+		}
+		else
+		{
+			// Stamina's still there, let it recharge!
+			isSprinting = false;
+			m_flStaminaTime = gpGlobals->time;
+			g_engfuncs.pfnSetClientMaxspeed(edict(), CLIENTSPEED_NORMAL);
+		}
+	}
+	else
+	{
+		// if stamina depleted, don't do sprinting! Rest please!
+		m_flStaminaTime = gpGlobals->time;
+		if (((pev->button & IN_RUN) != 0) && onGroundMotion)
+		{
+			isSprinting = false;
+			m_flStaminaTime = 0;
+			g_engfuncs.pfnSetClientMaxspeed(edict(), CLIENTSPEED_NORMAL);
+		}
+	}
+
 
 	// If trying to duck, already ducked, or in the process of ducking
 	if ((pev->button & IN_DUCK) != 0 || FBitSet(pev->flags, FL_DUCKING) || (m_afPhysicsFlags & PFLAG_DUCKING) != 0)
@@ -2971,6 +3011,8 @@ void CBasePlayer::Spawn()
 
 	m_iFlashBattery = 99;
 	m_flFlashLightTime = 1; // force first message
+
+	m_iStamina = 100;
 
 	// dont let uninitialized value here hurt the player
 	m_flFallVelocity = 0;
@@ -4253,6 +4295,32 @@ void CBasePlayer::UpdateClientData()
 		MESSAGE_END();
 	}
 
+	// Update Stamina
+	if ((0.00f != m_flStaminaTime) && (m_flStaminaTime <= gpGlobals->time))
+	{
+		if (isSprinting)
+		{
+			if (0 != m_iStamina)
+			{
+				m_flStaminaTime = STAMINA_DRAIN_TIME + gpGlobals->time;
+				m_iStamina--;
+			}
+			// otherwise stamina empty. Stop sprinting and rest!
+		}
+		else
+		{
+			if (m_iStamina < 100)
+			{
+				// ALERT(at_console, "stamina = %d\n", (int)m_iStamina);
+				m_flStaminaTime = STAMINA_CHARGE_TIME + gpGlobals->time;
+				m_iStamina++;
+			}
+		}
+
+		MESSAGE_BEGIN(MSG_ONE, gmsgStamina, NULL, pev);
+		WRITE_BYTE(m_iStamina);
+		MESSAGE_END();
+	}
 
 	if ((m_iTrain & TRAIN_NEW) != 0)
 	{

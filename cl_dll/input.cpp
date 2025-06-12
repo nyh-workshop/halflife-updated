@@ -840,6 +840,11 @@ int CL_ButtonBits(bool bResetState)
 		bits |= IN_ATTACK2;
 	}
 
+	if ((in_speed.state & 3) != 0)
+	{
+		bits |= IN_RUN;
+	}
+
 	if ((in_reload.state & 3) != 0)
 	{
 		bits |= IN_RELOAD;
@@ -874,6 +879,7 @@ int CL_ButtonBits(bool bResetState)
 		in_moveleft.state &= ~2;
 		in_moveright.state &= ~2;
 		in_attack2.state &= ~2;
+		in_speed.state &= ~2;
 		in_reload.state &= ~2;
 		in_alt1.state &= ~2;
 		in_score.state &= ~2;
@@ -975,10 +981,10 @@ void InitInput()
 	cl_yawspeed = gEngfuncs.pfnRegisterVariable("cl_yawspeed", "210", 0);
 	cl_pitchspeed = gEngfuncs.pfnRegisterVariable("cl_pitchspeed", "225", 0);
 	cl_upspeed = gEngfuncs.pfnRegisterVariable("cl_upspeed", "320", 0);
-	cl_forwardspeed = gEngfuncs.pfnRegisterVariable("cl_forwardspeed", "400", FCVAR_ARCHIVE);
-	cl_backspeed = gEngfuncs.pfnRegisterVariable("cl_backspeed", "400", FCVAR_ARCHIVE);
-	cl_sidespeed = gEngfuncs.pfnRegisterVariable("cl_sidespeed", "400", 0);
-	cl_movespeedkey = gEngfuncs.pfnRegisterVariable("cl_movespeedkey", "0.3", 0);
+	cl_forwardspeed = gEngfuncs.pfnRegisterVariable("cl_forwardspeed", "320", FCVAR_ARCHIVE);
+	cl_backspeed = gEngfuncs.pfnRegisterVariable("cl_backspeed", "320", FCVAR_ARCHIVE);
+	cl_sidespeed = gEngfuncs.pfnRegisterVariable("cl_sidespeed", "320", 0);
+	cl_movespeedkey = gEngfuncs.pfnRegisterVariable("cl_movespeedkey", "1.67", 0);
 	cl_pitchup = gEngfuncs.pfnRegisterVariable("cl_pitchup", "89", 0);
 	cl_pitchdown = gEngfuncs.pfnRegisterVariable("cl_pitchdown", "89", 0);
 
