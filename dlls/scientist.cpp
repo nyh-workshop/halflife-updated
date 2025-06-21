@@ -27,6 +27,7 @@
 #include "animation.h"
 #include "soundent.h"
 
+#include "effects.h"
 
 #define NUM_SCIENTIST_HEADS 4 // four heads available for scientist model
 enum
@@ -87,7 +88,54 @@ public:
 	Activity GetStoppedActivity() override;
 	int ISoundMask() override;
 	void DeclineFollowing() override;
+	void Touch(CBaseEntity* pOther) override
+	{
+		// Only when smacked by player with the hammer, and is flying and not on floor!
+		if (pev->iuser4 == 0x01)
+		{
+			if (!ENT_IS_ON_FLOOR(ENT(pev)) && pOther->IsBSPModel())
+			{
+				Killed(pev, GIB_ALWAYS);
+				// I lifted this out from bigmomma.cpp for the decal placement method!!				
+				for (int i = 0; i < 5; i++)
+				{
+					TraceResult tr;
 
+					Vector startVec = pev->origin;
+					Vector endVec = (pev->origin) + (pev->velocity * 10);
+
+					// Capture that outgoing velocity's direction - take its sign and put them into the random vector.
+					Vector randomVec;
+					randomVec.x = ((endVec.x < 0.00f) ? -1.00f : 1.00f) * RANDOM_FLOAT(0.00f, 1.00f);
+					randomVec.y = ((endVec.y < 0.00f) ? -1.00f : 1.00f) * RANDOM_FLOAT(0.00f, 1.00f);
+					randomVec.z = ((endVec.z < 0.00f) ? -1.00f : 1.00f) * RANDOM_FLOAT(0.00f, 1.00f);
+					
+					UTIL_TraceLine(startVec, endVec, ignore_monsters, ENT(pev), &tr);
+					UTIL_BloodDecalTrace(&tr, m_bloodColor);
+
+					/*CBeam* m_pb = CBeam::BeamCreate("sprites/laserbeam.spr", 5);
+					m_pb->PointsInit(startVec, endVec);
+					m_pb->SetColor(255, 0, 0);
+
+					CBeam* m_pb1 = CBeam::BeamCreate("sprites/laserbeam.spr", 5);
+					m_pb1->PointsInit(startVec, startVec + (50 * randomVec));
+					m_pb1->SetColor(0, 255, 0);*/
+
+					UTIL_TraceLine(startVec, startVec + (50 * randomVec), ignore_monsters, ENT(pev), &tr);
+					// ALERT(at_console, "tr.flFraction = %f\n", tr.flFraction);
+					UTIL_BloodDecalTrace(&tr, m_bloodColor);
+				}
+								
+				// Drawing the beam for debugging purposes only!!
+				// CBeam* m_pb = CBeam::BeamCreate("sprites/laserbeam.spr", 5);
+				// m_pb->PointsInit(vecSpot, vecSpot + Vector(0, -36, 0));
+				// m_pb->PointsInit(pev->origin, pev->origin + pev->velocity * 10);
+				// m_pb->SetColor(255, 0, 0);
+			}
+			else if (pOther->IsBSPModel())
+				pev->angles = Vector(0.0f, RANDOM_FLOAT(0.0f, 359.0f), 0.0f);
+		}
+	}
 	float CoverRadius() override { return 1200; } // Need more room for cover because scientists want to get far away!
 	bool DisregardEnemy(CBaseEntity* pEnemy) { return !pEnemy->IsAlive() || (gpGlobals->time - m_fearTime) > 15; }
 
@@ -517,6 +565,42 @@ void CScientist::RunTask(Task_t* pTask)
 {
 	switch (pTask->iTask)
 	{
+	//case TASK_DIE:
+	//{
+	//	if (m_fSequenceFinished && pev->frame >= 255)
+	//	{
+	//		pev->deadflag = DEAD_DEAD;
+
+	//		pev->avelocity = Vector(0.0f, 0.0f, 0.0f);
+
+	//		pev->angles = Vector(0.0f, RANDOM_FLOAT(0.0f, 359.0f), 0.0f);
+
+	//		SetThink(NULL);
+	//		StopAnimation();
+
+	//		if (!BBoxFlat())
+	//		{
+	//			// a bit of a hack. If a corpses' bbox is positioned such that being left solid so that it can be attacked will
+	//			// block the player on a slope or stairs, the corpse is made nonsolid.
+	//			//					pev->solid = SOLID_NOT;
+	//			UTIL_SetSize(pev, Vector(-4, -4, 0), Vector(4, 4, 1));
+	//		}
+	//		else // !!!HACKHACK - put monster in a thin, wide bounding box until we fix the solid type/bounding volume problem
+	//			UTIL_SetSize(pev, Vector(pev->mins.x, pev->mins.y, pev->mins.z), Vector(pev->maxs.x, pev->maxs.y, pev->mins.z + 1));
+
+	//		if (ShouldFadeOnDeath())
+	//		{
+	//			// this monster was created by a monstermaker... fade the corpse out.
+	//			SUB_StartFadeOut();
+	//		}
+	//		else
+	//		{
+	//			// body is gonna be around for a while, so have it stink for a bit.
+	//			CSoundEnt::InsertSound(bits_SOUND_CARCASS, pev->origin, 384, 30);
+	//		}
+	//	}		
+	//	break;
+	//}
 	case TASK_RUN_PATH_SCARED:
 		if (MovementIsComplete())
 			TaskComplete();

@@ -72,6 +72,7 @@ public:
 
 // weapon weight factors (for auto-switching)   (-1 = noswitch)
 #define CROWBAR_WEIGHT 0
+#define HAMMER_WEIGHT 0
 #define GLOCK_WEIGHT 10
 #define PYTHON_WEIGHT 15
 #define MP5_WEIGHT 15
@@ -411,6 +412,7 @@ typedef struct
 
 inline MULTIDAMAGE gMultiDamage;
 
+void FindHullIntersection(const Vector& vecSrc, TraceResult& tr, const Vector& mins, const Vector& maxs, edict_t* pEntity);
 
 #define LOUD_GUN_VOLUME 1000
 #define NORMAL_GUN_VOLUME 600
@@ -563,6 +565,67 @@ public:
 
 private:
 	unsigned short m_usCrowbar;
+};
+
+enum hammer_e
+{
+	HAMMER_IDLE1 = 0,
+	HAMMER_DRAW,
+	HAMMER_HOLSTER,
+	HAMMER_ATTACK1,
+	HAMMER_ATTACK2,
+	HAMMER_IDLE2,
+	HAMMER_IDLE3,
+	HAMMER_HOLSTER2,
+	HAMMER_HOLSTER3
+};
+
+class CHammer : public CBasePlayerWeapon
+{
+public:
+	void Spawn() override;
+	void Precache() override;
+	int iItemSlot() override { return 1; }
+	bool GetItemInfo(ItemInfo* p) override;
+	void PrimaryAttack() override;
+	void SecondaryAttack() override;
+	void ChargePrimaryAttack();
+	void ChargeSecondaryAttack();
+	void isSwingingAndCheckHit();
+	void checkHit();
+	bool Smack(CBaseEntity* pEntity, TraceResult& tr);
+	bool Deploy() override;
+	void Holster() override;
+	void WeaponIdle() override;
+
+	bool UseDecrement() override
+	{
+#if defined(CLIENT_WEAPONS)
+		return true;
+#else
+		return false;
+#endif
+	}
+private:
+	bool isHammerLifted;
+	float m_flHammerFirstLiftedTime;
+	float m_flStartSwingTime;
+	int m_iAttackType;
+	int m_iChargedHammerDamageMultiplier;
+
+	enum HAMMER_ATTACK_TYPE
+	{
+		HAMMER_ATTACK_SWING = 0,
+		HAMMER_ATTACK_SLAM = 1
+	};
+
+	const int DEFAULT_HAMMER_CHARGED_DMG_MULTIPLIER = 400;
+	const int LVL1_HAMMER_CHARGED_DMG_MULTIPLIER = 600;
+	const int LVL2_HAMMER_CHARGED_DMG_MULTIPLIER = 700;
+	const float HAMMER_NEXT_ATTACK_DELAY = 1.2f;
+
+	TraceResult m_trHit;
+	unsigned short m_usHammer;
 };
 
 enum python_e
