@@ -31,6 +31,8 @@ void EV_EgonStop(event_args_t* args);
 void EV_HornetGunFire(event_args_t* args);
 void EV_TripmineFire(event_args_t* args);
 void EV_SnarkFire(event_args_t* args);
+void EV_GrenadeTossProj(event_args_t* args);
+void EV_GrenadeExitTossProj(event_args_t* args);
 
 
 

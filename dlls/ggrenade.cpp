@@ -339,6 +339,13 @@ void CGrenade::TumbleThink()
 		return;
 	}
 
+	Vector vecDistance = pev->owner->v.origin - pev->origin;
+	float distanceBetweenPlayerAndGrenade = sqrtf(vecDistance.x * vecDistance.x + vecDistance.y * vecDistance.y + vecDistance.z * vecDistance.z);
+
+	// To measure dist. between player and tossed grenade:
+	// ALERT(at_console, "dist between player-grenade: %f\n", distanceBetweenPlayerAndGrenade);
+	// ALERT(at_console, "grenade's pev->origin: (%f,%f,%f)\n", pev->origin.x, pev->origin.y, pev->origin.z);
+
 	StudioFrameAdvance();
 	pev->nextthink = gpGlobals->time + 0.1;
 

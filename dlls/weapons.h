@@ -1088,6 +1088,10 @@ public:
 		return false;
 #endif
 	}
+
+private:
+	unsigned short m_usGrenadeTossProj;
+	unsigned short m_usGrenadeExitTossProj;
 };
 
 enum satchel_e

@@ -46,6 +46,9 @@ void CHandGrenade::Precache()
 	PRECACHE_MODEL("models/w_grenade.mdl");
 	PRECACHE_MODEL("models/v_grenade.mdl");
 	PRECACHE_MODEL("models/p_grenade.mdl");
+
+	m_usGrenadeTossProj = PRECACHE_EVENT(1, "events/grenadeTossProj.sc");
+	m_usGrenadeExitTossProj = PRECACHE_EVENT(1, "events/grenadeExitTossProj.sc");
 }
 
 bool CHandGrenade::GetItemInfo(ItemInfo* p)
@@ -102,6 +105,10 @@ void CHandGrenade::Holster()
 
 void CHandGrenade::PrimaryAttack()
 {
+	PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usGrenadeTossProj,
+		0.0, g_vecZero, g_vecZero, 0, 0, 0,
+		0.0, 0, 0.0);
+
 	if (0 == m_flStartThrow && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] > 0)
 	{
 		m_flStartThrow = gpGlobals->time;
@@ -123,6 +130,10 @@ void CHandGrenade::WeaponIdle()
 
 	if (0 != m_flStartThrow)
 	{
+		PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usGrenadeExitTossProj,
+			0.0, g_vecZero, g_vecZero, 0, 0, 0,
+			0.0, 0, 0.0);
+
 		Vector angThrow = m_pPlayer->pev->v_angle + m_pPlayer->pev->punchangle;
 
 		if (angThrow.x < 0)
@@ -140,6 +151,10 @@ void CHandGrenade::WeaponIdle()
 		Vector vecSrc = m_pPlayer->pev->origin + m_pPlayer->pev->view_ofs + gpGlobals->v_forward * 16;
 
 		Vector vecThrow = gpGlobals->v_forward * flVel + m_pPlayer->pev->velocity;
+
+		float magnitude = sqrtf(vecThrow.x * vecThrow.x + vecThrow.y * vecThrow.y + vecThrow.z * vecThrow.z);
+		// ALERT(at_console, "vecThrow = (%f,%f,%f)\n", vecThrow.x, vecThrow.y, vecThrow.z);
+		// ALERT(at_console, "vecThrow magnitude = %f\n", magnitude);
 
 		// alway explode 3 seconds after the pin was pulled
 		float time = m_flStartThrow - gpGlobals->time + 3.0;

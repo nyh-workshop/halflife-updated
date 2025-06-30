@@ -1676,3 +1676,177 @@ bool EV_TFC_IsAllyTeam(int iTeam1, int iTeam2)
 {
 	return false;
 }
+
+float EV_CalculateParabolicHeightAtZ(Vector& aSrc, Vector& aEnd, float aX)
+{
+	float A_curve = (aSrc.z - aEnd.z) / ((aSrc.x - aEnd.x) * (aSrc.x - aEnd.x));
+	float y_max = A_curve * (aX - aEnd.x) * (aX - aEnd.x) + aEnd.z;
+	return y_max;
+}
+
+inline void EV_KillAllBeams(BEAM* aBeam)
+{
+	// The BEAM entity has a linked list - travese to kill off the beams!
+	while (aBeam != nullptr)
+	{
+		aBeam->die = 0.00f;
+		aBeam = aBeam->next;
+	}
+}
+
+constexpr unsigned int MAX_POINTS_TO_DRAW = 8;
+BEAM* pGrenadeTossArcPath;
+
+void EV_GrenadeTossProj(event_args_t* args)
+{
+	int idx;
+	Vector origin;
+	Vector angles;
+	Vector velocity;
+
+	static Vector curr_origin;
+	static Vector curr_angles;
+	static Vector prev_origin;
+	static Vector prev_angles;
+
+	Vector vecAngles;
+	Vector forward, right, up;
+	Vector view_ofs;
+
+	idx = args->entindex;
+	VectorCopy(args->origin, origin);
+	VectorCopy(args->angles, angles);
+	VectorCopy(args->velocity, velocity);
+	VectorCopy(gHUD.m_vecAngles, vecAngles);
+	gEngfuncs.pEventAPI->EV_LocalPlayerViewheight(view_ofs);
+
+	static bool beamDrawn = false;
+	int m_iBeam = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/laserbeam.spr");
+
+	// ALERT(at_console, "args->origin = (%f,%f,%f) ", origin.x, origin.y, origin.z);
+	// ALERT(at_console, "gHUD.m_vecAngles = (%f,%f,%f)\n", vecAngles.x, vecAngles.y, vecAngles.z);
+	// ALERT(at_console, "args->angles = (%f,%f,%f)\n", angles.x, angles.y, angles.z);
+
+	// From the HUD view:
+	// AngleVectors(vecAngles, forward, right, up);
+	// Vector vecSrc = origin + view_ofs;
+	// Vector vecEnd = vecSrc + forward * 32;
+
+	// This part is lifted off from the handgrenade.cpp - still need this to form throwing angles!
+	Vector angThrow = angles;
+
+	if (angThrow.x < 0)
+		angThrow.x = -10 + angThrow.x * ((90 - 10) / 90.0);
+	else
+		angThrow.x = -10 + angThrow.x * ((90 + 10) / 90.0);
+
+	AngleVectors(angThrow, forward, right, up);
+
+	// Vector vecSrc = origin + view_ofs;
+	// Vector vecEnd = vecSrc + forward * flVel + velocity;
+
+	Vector vecSrc = origin;
+	Vector vecEnd = Vector(0.0f, 0.0f, 0.0f);
+	// Adjust the origin's z so that the line is nearing the floor!
+	// Also, the grenade path origin must be slightly at the right for the player to fully view it!
+	(forward.y < 0) ? vecSrc.x -= 25 : vecSrc.x += 25;
+	vecSrc.z -= 15;
+	forward.z = 0;
+
+	float predictedGrenadeTossHeight = 0.0f;
+	float predictedGrenadeTossDistance = 0.0f;
+	float positiveVecAnglesX = -vecAngles.x;
+
+	// Distance predicted:
+	// -0.8x2 + 81x + 650 ( 0 < -x < 57.3 )
+	// 1/(0.0002x-0.0111) ( 57.3 < -x < 90 )
+	//
+
+	// Height predicted:
+	// y = 520erf(0.038x - 1.2) + 520
+	//
+	// The ERF function might be computationally expensive!
+	// I don't know if it would affect frame rates there.
+	// I'm finding a replacement once this works well!
+
+	float predictedGrenadeTossHeightAdjust = 0.8f;
+	
+	predictedGrenadeTossHeight = predictedGrenadeTossHeightAdjust * 520.0f * (erff(0.038f * positiveVecAnglesX - 1.2f) + 1.0f);
+
+	if (positiveVecAnglesX < 57.35f && positiveVecAnglesX > 0.00f)
+	{
+		predictedGrenadeTossDistance = -0.8f * positiveVecAnglesX * positiveVecAnglesX + 81.0f * positiveVecAnglesX + 650.0f;
+	}
+	else if (positiveVecAnglesX < 90.00f && positiveVecAnglesX > 57.35f)
+	{
+		predictedGrenadeTossDistance = 1.0f / (0.0002f * positiveVecAnglesX - 0.0111f);
+	}
+
+	// ALERT(at_console, "predictedGrenadeTossHeight = %f\n", predictedGrenadeTossHeight);
+	// ALERT(at_console, "forward: (%f,%f,%f)\n", forward.x, forward.y, forward.z);
+
+	// That forward vector is unit circle:
+	vecEnd = vecSrc + forward * predictedGrenadeTossDistance;
+
+	// Draw the estimated max height?
+	Vector vecMid = vecSrc + forward * predictedGrenadeTossDistance / 2.00f;
+	Vector vecMidEnd = Vector(vecMid.x, vecMid.y, vecSrc.z + predictedGrenadeTossHeight);
+
+	// Find changes in direction and angles too:
+	curr_origin = origin;
+	curr_angles = vecAngles;
+	bool angleChange = false;
+	bool originChange = false;
+
+	if (curr_origin != prev_origin)
+	{
+		prev_origin = curr_origin;
+		originChange = true;
+	}
+
+	if (curr_angles != prev_angles)
+	{
+		prev_angles = curr_angles;
+		angleChange = true;
+	}
+
+	// If location or angle changes, clear the previous arc and redraw the new arc!
+	if (originChange || angleChange)
+	{
+		if (beamDrawn)
+		{
+			EV_KillAllBeams(pGrenadeTossArcPath);
+			beamDrawn = false;
+		}
+	}
+
+	// Draw the arc beam if it is not drawn:
+	if (!beamDrawn)
+	{
+		Vector v_prev = vecSrc;
+		Vector v_next = Vector(0.0f, 0.0f, 0.0f);
+
+		// To form a parabolic arc, join these end-to-end beam lines one-by-one!
+		for (unsigned int i = 0; i < MAX_POINTS_TO_DRAW; i++)
+		{
+			v_next = v_prev + (forward * predictedGrenadeTossDistance) / (float)MAX_POINTS_TO_DRAW;
+			v_next.z = EV_CalculateParabolicHeightAtZ(vecSrc, vecMidEnd, v_next.x);
+			// R_BeamPoints: From XASH3D's github - not returning beam pointers that are not in the player's FOV!
+			// pGrenadeTossArcPath = gEngfuncs.pEfxAPI->R_BeamPoints(v_prev, v_next, m_iBeam, 99999, 1.0, 0, 255.0, 0, 0, 0, 255, 255, 255);
+			pGrenadeTossArcPath = gEngfuncs.pEfxAPI->R_BeamCirclePoints(0, v_prev, v_next, m_iBeam, 99999, 5.0, 0, 255.0, 0, 0, 0, 255, 0, 0);
+			v_prev = v_next;
+		}
+
+		beamDrawn = true;
+	}
+	
+	// Debug - Draw these max. distance covered and max. height too:
+	// gEngfuncs.pEfxAPI->R_BeamPoints(vecSrc, vecEnd, m_iBeam, 0.5, 0.5, 0, 255.0, 0, 0, 0, 255, 0, 0);
+	// gEngfuncs.pEfxAPI->R_BeamPoints(vecMid, vecMidEnd, m_iBeam, 0.5, 0.5, 0, 255.0, 0, 0, 0, 0, 255, 0);
+}
+
+void EV_GrenadeExitTossProj(event_args_t* args)
+{
+	if (pGrenadeTossArcPath)
+		EV_KillAllBeams(pGrenadeTossArcPath);
+}
